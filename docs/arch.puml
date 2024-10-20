@@ -1,0 +1,15 @@
+@startuml
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist
+!include AWSPuml/AWSCommon.puml
+!include AWSPuml/Storage/SimpleStorageService.puml
+!include AWSPuml/Analytics/EMR.puml
+
+SimpleStorageService(inputAlias, "Input Data", "S3 folder")
+SimpleStorageService(outputAlias, "Output Results", "S3 folder")
+EMR(emrAlias, "Spark Job", "EMR Serverless")
+
+
+inputAlias -> emrAlias
+emrAlias -> outputAlias
+
+@enduml
