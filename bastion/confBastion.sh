@@ -5,11 +5,11 @@ then
     exit 1
 fi
 CLUSTER_NAME=${1?Enter the kafka cluster name}
-#Show each command
-set -v
 #Fail on error
 set -e
 eval "$(aws configure export-credentials --profile default --format env)"
+#Show each command
+set -v
 APP_KEY="msk-bastion"
 #Find kafka arn
 KAFKA_ARN=`aws kafka list-clusters --query 'ClusterInfoList[].[ClusterName,ClusterArn]' --output text | grep $CLUSTER_NAME | awk '{print $2}'`

@@ -1,8 +1,8 @@
 #!/bin/bash
 source confBastion.sh
 INSTANCE=`aws ec2 describe-instances   --filters Name=key-name,Values=$APP_KEY   \
-    --query 'Reservations[].Instances[].[InstanceId,State.Name,PublicIpAddress,InstanceType]'   --output text`
-echo $INSTANCE
+    --query 'Reservations[].Instances[].[InstanceId,State.Name,PublicIpAddress,InstanceType]'   --output text | awk '{print $1}'`
+echo "INSTANCE=$INSTANCE"
 #STOP EC2 instance to avoid charges
 if [ "$INSTANCE" != "" ]
 then
@@ -12,11 +12,12 @@ fi
 SG_ID=$(aws ec2 describe-security-groups \
   --filters Name=group-name,Values=msk-bastion-sg Name=vpc-id,Values=$KAFKA_VPC \
   --query 'SecurityGroups[].GroupId' --output text)
+echo "SG_ID=${SG_ID}"
 #Check in and out permissions that are dependent
 if [ "$SG_ID" != "" ]
 then
     dep_types=("_" "egress.")
-    for i in "_ egress."
+    for i in ${dep_types[@]}
     do
         i_mod=${i/_/}
         DEP_ID=`aws ec2 describe-security-groups \
