@@ -6,6 +6,7 @@ group_policy.json
 scripts/downloads
 scripts/uploads
 scripts/temp
+output
 
 # sbt specific
 .cache

@@ -36,7 +36,7 @@ do
     BASTION_IP=`aws ec2 describe-instances --filters Name=tag:Name,Values=$APP_KEY \
         Name=instance-state-name,Values=running \
         --query 'Reservations[].Instances[].PublicIpAddress' --output text`
-    if [ "$BASTION_IP" = "" ]
+    if [ "$BASTION_IP" != "" ]
     then
         break
     fi
@@ -73,6 +73,7 @@ echo "==="
 echo "export KAFKA_SCRIPT_DIR=<where you installed kafka scripts>"
 echo "cp msk-iam.properties \$KAFKA_SCRIPT_DIR"
 echo "cd \$KAFKA_SCRIPT_DIR"
+echo "wget https://github.com/aws/aws-msk-iam-auth/releases/download/v2.3.2/aws-msk-iam-auth-2.3.2-all.jar --directory-prefix=libs"
 echo "export KAFKA_BROKER=$KAFKA_BROKER"
 echo "./bin/kafka-xxxxx.sh --bootstrap-server $KAFKA_BROKER --command-config msk-iam.properties ..."
 
