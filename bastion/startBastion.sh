@@ -31,10 +31,18 @@ aws ec2 run-instances \
   --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${APP_KEY}}]" \
   --output text
 
-BASTION_IP=`aws ec2 describe-instances --filters Name=tag:Name,Values=$APP_KEY \
-  Name=instance-state-name,Values=running \
-  --query 'Reservations[].Instances[].PublicIpAddress' --output text`
-
+for i in `seq 1 10`
+do
+    BASTION_IP=`aws ec2 describe-instances --filters Name=tag:Name,Values=$APP_KEY \
+        Name=instance-state-name,Values=running \
+        --query 'Reservations[].Instances[].PublicIpAddress' --output text`
+    if [ "$BASTION_IP" = "" ]
+    then
+        break
+    fi
+    echo "Waiting $i for instance..."
+    sleep 1
+done
 KAFKA_BROKER=`aws kafka get-bootstrap-brokers --cluster-arn $KAFKA_ARN --output text | awk -F, '{print $1}'`
 #Check that IP works
 
