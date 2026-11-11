@@ -8,7 +8,7 @@ GROUP_ARN="$(echo "$KAFKA_ARN" | sed 's/:cluster\//:group\//')/*"
 #Create role - EC2 is trusted
 aws iam create-role \
   --role-name MSKClientRole \
-  --assume-role-policy-document file://mskTrustPolicy.json
+  --assume-role-policy-document file://mskTrustPolicy.json || true
 #Replace arns in permissions policy
 permitPolicy=output/mskPermissionsPolicy.json
 #Replace, but ignore slash in sed
@@ -21,12 +21,12 @@ aws iam put-role-policy \
 
 #Create instance profile
 aws iam create-instance-profile \
-  --instance-profile-name MSKClientProfile
+  --instance-profile-name MSKClientProfile || true
 
 #Add role to it 
 aws iam add-role-to-instance-profile \
   --instance-profile-name MSKClientProfile \
-  --role-name MSKClientRole
+  --role-name MSKClientRole || true
 
 INSTANCE=`aws ec2 describe-instances   --filters Name=key-name,Values=$APP_KEY   \
     --query 'Reservations[].Instances[].[InstanceId,State.Name,PublicIpAddress,InstanceType]'   --output text | awk '{print $1}'`

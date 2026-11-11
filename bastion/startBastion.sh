@@ -23,7 +23,7 @@ aws ec2 authorize-security-group-ingress \
 
 aws ec2 run-instances \
   --image-id resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 \
-  --instance-type t3.micro \
+  --instance-type t3.small \
   --key-name ${APP_KEY} \
   --subnet-id $KAFKA_SUBNET \
   --security-group-ids $BASTION_SG \
@@ -43,7 +43,8 @@ do
     echo "Waiting $i for instance..."
     sleep 1
 done
-KAFKA_BROKER=`aws kafka get-bootstrap-brokers --cluster-arn $KAFKA_ARN --output text | awk -F, '{print $1}'`
+KAFKA_BROKERS_ALL=`aws kafka get-bootstrap-brokers --cluster-arn $KAFKA_ARN --output text`
+KAFKA_BROKER=`echo $KAFKA_BROKERS_ALL | awk -F, '{print $1}'`
 #Check that IP works
 
 #Allow Bastion to access Kafka
@@ -52,15 +53,22 @@ aws ec2 authorize-security-group-ingress \
   --source-group $BASTION_SG
 #Get all kafka brokers
 
-ALL_BROKERS=`aws kafka get-bootstrap-brokers --cluster-arn $KAFKA_ARN   --query 'BootstrapBrokerStringSaslIam' --output text | tr ',' '\n' | sort`
+ALL_BROKERS=`echo $KAFKA_BROKERS_ALL | tr ',' '\n' | sort`
+#Set up scripts
+ssh -i ~/.ssh/${APP_KEY}.pem ec2-user@$BASTION_IP "mkdir .bashrc.d"
+sed "s/%KAFKA_BROKERS_ALL%/$KAFKA_BROKERS_ALL/" bastion_bashrc > output/bastion_bashrc
+#This will run on startup
+scp -i ~/.ssh/${APP_KEY}.pem output/bastion_bashrc ec2-user@$BASTION_IP:.bashrc.d/init_bastion
 set +v
 echo "==="
-echo "1. Run in separate window:"
+echo "1. Run in separate window (Keeps ssh tunnel open - ctrl+C to exit):"
 echo "==="
+echo "for (( ; ; )); do"
 echo "ssh -i ~/.ssh/${APP_KEY}.pem -N \\"
 echo "  -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes \\"
 echo "$ALL_BROKERS" | awk '{print "-L 127.0.0." NR+1 ":9098:" $1 " \\"}'
 echo "  ec2-user@$BASTION_IP"
+echo "done"
 echo
 echo "==="
 echo "2. Add this to /etc/hosts file, sudo as root"
@@ -68,9 +76,19 @@ echo "==="
 echo "$ALL_BROKERS" | sed 's/:9098//' | awk '{print "127.0.0." NR+1 " " $1 }'
 echo
 echo "==="
-echo "3. To run the kafka scripts"
+echo "3. To access the Bastion ip"
 echo "==="
-echo "export KAFKA_SCRIPT_DIR=<where you installed kafka scripts>"
+echo "  #Securely log in to the ip"
+echo "ssh -i ~/.ssh/${APP_KEY}.pem ec2-user@$BASTION_IP"
+echo "  #Copy files to the ip"
+echo "scp -i ~/.ssh/${APP_KEY}.pem yourfile.jar ec2-user@$BASTION_IP:"
+echo "==="
+echo "4. To run the kafka scripts locally"
+echo "==="
+echo "    #Download the fork of kafdrop: https://github.com/v-tadipatri/kafdrop"
+echo "    #Download & extract the 'binary download' scripts tar.gz: https://kafka.apache.org/community/downloads/"
+echo "export KAFKA_BROKERS_ALL=$KAFKA_BROKERS_ALL"
+echo "export KAFKA_SCRIPT_DIR=<where you unpacked kafka scripts>"
 echo "cp msk-iam.properties \$KAFKA_SCRIPT_DIR"
 echo "cd \$KAFKA_SCRIPT_DIR"
 echo "wget https://github.com/aws/aws-msk-iam-auth/releases/download/v2.3.2/aws-msk-iam-auth-2.3.2-all.jar --directory-prefix=libs"

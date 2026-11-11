@@ -29,6 +29,9 @@ then
                 --protocol tcp --port 9098 --source-group $SG_ID
         fi
     done
+    #Try again if this fails
+    echo "Waiting to delete group..."
+    sleep 5
     aws ec2 delete-security-group --group-id $SG_ID
 fi
 #Delete key pair

@@ -1,12 +1,11 @@
 #!/bin/bash
 if [ "${BASH_SOURCE[0]}" -ef "$0" ]
 then
-    echo "This cannot be executed directly - see the start/stop scripts"
-    exit 1
+    echo "This only sets variables - see the start/stop scripts"
 fi
 CLUSTER_NAME=${1?Enter the kafka cluster name}
 #Fail on error
-set -e
+set -euo pipefail
 eval "$(aws configure export-credentials --profile default --format env)"
 #Show each command
 set -v
@@ -19,4 +18,10 @@ KAFKA_SUBNET=`aws kafka describe-cluster --cluster-arn $KAFKA_ARN \
 # Look up the VPC from one of those subnets
 KAFKA_VPC=`aws ec2 describe-subnets --subnet-ids $KAFKA_SUBNET \
   --query 'Subnets[0].VpcId' --output text`
-
+set +v
+echo "*******"
+echo "    KAFKA_ARN=$KAFKA_ARN"
+echo "    KAFKA_SUBNET=$KAFKA_SUBNET"
+echo "    KAFKA_VPC=$KAFKA_VPC"
+echo "*******"
+set -v
