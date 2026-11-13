@@ -1,4 +1,4 @@
-## Setting up Kafka on AWS
+# Setting up Kafka on AWS
 
 This contains an overview of setting up Apache Kafka on Amazon's MSK (Managed Service for Kafka)
 Here is what the overall architecture looks like. To connect to Amazon's Kafka broker, 
@@ -9,7 +9,7 @@ to set up the right IAM role policies and permissions, both locally and on the E
 
 ![MSK Bastion](bastion_host_kafka.jpg)
 
-### Creating an MSK cluster
+## Creating an MSK cluster
 
 Once you log in to AWS, if you go to MSK
 1. Create cluster
@@ -64,4 +64,20 @@ Because the EC2 instance does not have anything installed, the first time you ss
 
 Clone the Kafdrop fork: [https://github.com/v-tadipatri/kafdrop](https://github.com/v-tadipatri/kafdrop)
 There's a kafka.properties file, which you will have to rename when running locally without IAM
+
+## Publishing to Kafka
+
+To publish to AWS MSK you need to be using a Java application that can handle IAM authentication.
+As mentioned in the output from startBastion.sh, you will need the local msk-iam.properties and the aws-msk-iam-auth jar file
+With the scripts downloaded from the Kafka website:
+
+```
+aws sts get-caller-identity
+export KAFKA_BROKERS_ALL=<see_output>
+#This produces to an input_txn topic with no key
+./bin/kafka-console-producer.sh --bootstrap-server $KAFKA_BROKERS_ALL  --command-config msk-iam.properties --topic input_txn < data/kafka_transactions.csv
+#This produces to an input_cust topic with the 1st csv value as the key
+./bin/kafka-console-producer.sh --bootstrap-server $KAFKA_BROKERS_ALL  --command-config msk-iam.properties --topic input_cust --property "parse.key=true"  --property "key.separator=," < data/kafka_customers.csv
+
+```
 
