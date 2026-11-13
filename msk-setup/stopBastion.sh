@@ -31,6 +31,11 @@ then
     done
     #Try again if this fails
     echo "Waiting to delete group..."
+    echo "==="
+    echo "  If this fails, wait, then manually run: "
+    echo "aws ec2 delete-security-group --group-id $SG_ID"
+    echo "aws ec2 delete-key-pair --key-name $APP_KEY"
+    echo "==="
     sleep 5
     aws ec2 delete-security-group --group-id $SG_ID
 fi
