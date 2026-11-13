@@ -1,0 +1,29 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EMRServerlessJobSubmission",
+            "Effect": "Allow",
+            "Action": [
+                "emr-serverless:StartJobRun",
+                "emr-serverless:GetJobRun",
+                "emr-serverless:ListJobRuns",
+                "emr-serverless:CancelJobRun"
+            ],
+			//replace these values
+            "Resource": "arn:aws:emr-serverless:us-east-1:<acct_id>:/applications/<app_id>"
+        },
+        {
+            "Sid": "PassExecutionRole",
+            "Effect": "Allow",
+            "Action": "iam:PassRole",
+			//replace these values
+            "Resource": "arn:aws:iam::<acct_id>:role/service-role/AmazonEMR-ExecutionRole-<role_id>",
+            "Condition": {
+                "StringEquals": {
+                    "iam:PassedToService": "emr-serverless.amazonaws.com"
+                }
+            }
+		} 
+    ]
+}

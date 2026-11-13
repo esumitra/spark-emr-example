@@ -1,0 +1,11 @@
+{
+  "Effect": "Allow",
+  "Action": [
+    "kinesis:GetRecords",
+    "kinesis:GetShardIterator",
+    "kinesis:DescribeStream",
+    "kinesis:ListStreams"
+  ],
+  "Resource": "*"
+}
+
