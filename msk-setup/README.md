@@ -7,7 +7,7 @@ You can set up port forwarding so that you can run Kafdrop or publish messages t
 using a local IP address, and it will get forwarded to the actual MSK broker in Kafka. To do this, we will also need 
 to set up the right IAM role policies and permissions, both locally and on the EC2 bastion host.
 
-(bastion_host_kafka.jpg)
+![MSK Bastion](bastion_host_kafka.jpg)
 
 ### Creating an MSK cluster
 
