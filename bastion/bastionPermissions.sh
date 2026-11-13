@@ -19,17 +19,17 @@ aws iam put-role-policy \
   --policy-name MSKClientPolicy \
   --policy-document file://$permitPolicy
 
-#Create instance profile
-aws iam create-instance-profile \
-  --instance-profile-name MSKClientProfile || true
+aws iam get-instance-profile --instance-profile-name MSKClientProfile >/dev/null 2>&1 \
+  || aws iam create-instance-profile --instance-profile-name MSKClientProfile
 
-#Add role to it 
-aws iam add-role-to-instance-profile \
-  --instance-profile-name MSKClientProfile \
-  --role-name MSKClientRole || true
-
-INSTANCE=`aws ec2 describe-instances   --filters Name=key-name,Values=$APP_KEY   \
-    --query 'Reservations[].Instances[].[InstanceId,State.Name,PublicIpAddress,InstanceType]'   --output text | awk '{print $1}'`
+aws iam get-instance-profile --instance-profile-name MSKClientProfile \
+  --query 'InstanceProfile.Roles[].RoleName' --output text | grep -qx MSKClientRole \
+  || aws iam add-role-to-instance-profile \
+       --instance-profile-name MSKClientProfile --role-name MSKClientRole
+INSTANCE=$(aws ec2 describe-instances \
+  --filters "Name=key-name,Values=$APP_KEY" "Name=instance-state-name,Values=running" \
+  --query 'Reservations[].Instances[].InstanceId' \
+  --output text)
 
 #Wait for associate
 sleep 1
